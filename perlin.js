@@ -68,6 +68,15 @@ class Perlin {
     lerp(t, a0, a1){
         return a0 + t * (a1 - a0);
     }
+    
+    getGradient1D(x){
+        let i = this.permutation_table[x] & 1;
+        if (i == 0){
+            return 1.0;
+        else {
+            return  -1.0;
+        }
+    }
 
     getGradient2D(x, y){
         let i = this.permutation_table[this.permutation_table[x] + y] & 3;
@@ -81,6 +90,23 @@ class Perlin {
             return new Vec2(-1, -1);
         }
     }
+        
+    noise1D(x){
+        let noiseGridX = Math.floor(x) & 255;
+        
+        let xf = x - Math.floor(x);
+        
+        let u = this.fade(xf);
+        
+        let left = xf;
+        let right = xf - 1.0;
+        
+        let n = this.lerp(u, left * this.getGradient1D(noiseGridX), right * this.getGradient1D(noiseGridX + 1));
+        
+        n += 1.0;
+        n /= 2.0;
+        
+        return n;
 
     noise2D(x, y){
         let noiseGridX = Math.floor(x) & 255;
@@ -105,6 +131,23 @@ class Perlin {
         n += Math.sqrt(2);
         n /= (2 * Math.sqrt(2));
 
+        return n;
+    }
+        
+    octaves1D(x, num_octaves){
+        let n = 0;
+        let amplitude = 1;
+        let frequency = this.frequency;
+        let max = 0;
+        
+        for (let o = 0; o < num_octaves; o++){
+            n += amplitude * this.noise1D(x * frequency);
+            max += amplitude;
+            amplitude *= this.persistence;
+            frequency *= 2;
+        }
+
+        n /= max;
         return n;
     }
 
@@ -180,7 +223,7 @@ class Perlin {
         let n = this.lerp(w, d0, d1);
 
         n += Math.sqrt(3);
-        n /= (3 * Math.sqrt(3));
+        n /= (2 * Math.sqrt(3));
 
         return n;
     }
